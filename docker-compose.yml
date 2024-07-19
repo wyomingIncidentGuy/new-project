@@ -1,0 +1,59 @@
+version: '3'
+
+services:
+  php:
+    build:
+      context: ./server
+    volumes:
+      - './server/www/laravel/example-app:/var/www/html'
+
+  nginx-api:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - './server/www/laravel/example-app:/var/www/html'
+      - './docker/nginx/conf.d:/etc/nginx/conf.d'
+
+  nginx-frontend:
+    image: nginx:latest
+    ports:
+      - "81:80"
+    volumes:
+      - './client/dist:/var/www/html'
+      - './docker/nginx-frontend/conf.d:/etc/nginx/conf.d'
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel_user
+      MYSQL_PASSWORD: laravel_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "8081:80"
+    depends_on:
+      - db
+
+  node-js:
+    build: 
+      context: ./client
+    volumes:
+      - ./client:/app
+    ports:
+      - "3000:8080"
+      - "3030:8081"
+
+volumes:
+  db_data:
+    driver: local
